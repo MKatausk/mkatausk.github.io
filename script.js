@@ -38,9 +38,12 @@ fetch('https://compute.samford.edu/zohauth/clients/datajson')
         datetimeCell.textContent = item.datetime || '--';
         row.appendChild(datetimeCell);
         
-        // Append the row to the table
-        table.appendChild(row);
+        // Append the row to the tbody
+        tbody.appendChild(row);
     });
+    
+    // Append the tbody to the table
+    table.appendChild(tbody);
 })
 .catch(error => {
     console.error('Error fetching data:', error);
