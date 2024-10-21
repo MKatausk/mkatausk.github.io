@@ -45,4 +45,3 @@ fetch('https://compute.samford.edu/zohauth/clients/datajson')
 .catch(error => {
     console.error('Error fetching data:', error);
 });
-});
