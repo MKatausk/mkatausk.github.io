@@ -1,11 +1,44 @@
-function filterData() {
-  event.preventDefault();
-  var startdate = document.getElementById("startdate").value;
-  var enddate = document.getElementById("enddate").value;
+function filterData(event) {
+  event.preventDefault(); // Prevent form submission behavior
+  
+  // Get start and end dates from input fields
+  var startdate = new Date(document.getElementById("startdate").value);
+  var enddate = new Date(document.getElementById("enddate").value);
+  
   console.log("Starting date: " + startdate);
   console.log("Ending date: " + enddate);
 
+  // Ensure the enddate includes the full day by setting the time to the end of the day
+  enddate.setHours(23, 59, 59, 999);
+
+  // Get all rows in the table except the header row
+  var rows = document.querySelectorAll("#pitch-table tbody tr");
+
+  // Loop through each row
+  rows.forEach(function(row) {
+      // Get the datetime value from the row (assuming it's in the 4th cell)
+      var datetimeText = row.cells[3].textContent.trim();
+
+      // If the datetime is missing or invalid, hide the row
+      if (!datetimeText || datetimeText === '--') {
+          row.style.display = 'none';
+          return;
+      }
+
+      // Parse the datetime from the table row
+      var rowDate = new Date(datetimeText);
+
+      // Compare the rowDate with the start and end dates
+      if (rowDate >= startdate && rowDate <= enddate) {
+          // Show the row if within the range
+          row.style.display = '';
+      } else {
+          // Hide the row if outside the range
+          row.style.display = 'none';
+      }
+  });
 }
+
 
 // Ensure the tbody is created outside the fetch logic
     let tbody = table.querySelector('tbody');
