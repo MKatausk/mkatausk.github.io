@@ -39,13 +39,6 @@ function filterData(event) {
   });
 }
 
-
-// Ensure the tbody is created outside the fetch logic
-    if (!tbody) {
-        tbody = document.createElement('tbody');
-        table.appendChild(tbody);
-    }
-
     // Fetch data from the URL
     fetch('https://compute.samford.edu/zohauth/clients/datajson')
         .then(response => response.json())
