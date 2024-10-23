@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pitch Stats</title>
+  <style>
+    .blue {
+      color: #0C2340;
+    }
+
+    .red {
+      color: #BD1F2D;
+    }
+
+    th {
+      border-bottom: 1px solid gray;
+      font-weight: bold;
+      font-size: 1.2em;
+      cursor: pointer;
+    }
+
+    th.sorted-asc::after {
+      content: " ▲";
+    }
+
+    th.sorted-desc::after {
+      content: " ▼";
+    }
+
+    a {
+      text-decoration:none;
+    }
+
+    a:hover {
+      text-decoration:underline;
+    }
+
+    h1 {
+      text-align:center;
+    }
+  </style>
+</head>
+<body>
+  <h1 class="red">Trackman Pitch Stats Viewer</h1>
+  <form onsubmit="filterData(event);">
+    <label>Starting date</label>
+    <input type="date" id="startdate">
+    <label>End date</label>
+    <input type="date" id="enddate">
+    <button>Filter</button>
+  </form>
+  <table id="pitch-table">
+    <thead>
+      <tr>
+        <th onclick="sortTable(0)">ID</th>
+        <th onclick="sortTable(1)">Speed</th>
+        <th onclick="sortTable(2)">Result</th>
+        <th onclick="sortTable(3)">Datetime</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Data rows will be dynamically inserted here -->
+    </tbody>
+  </table>
+
+  <script>
+    // Filter data function
+    function filterData(event) {
+      event.preventDefault(); // Prevent form submission behavior
+      
+      // Get start and end dates from input fields
+      var startdate = new Date(document.getElementById("startdate").value);
+      var enddate = new Date(document.getElementById("enddate").value);
+      
+      // Ensure the enddate includes the full day by setting the time to the end of the day
+      enddate.setHours(23, 59, 59, 999);
+
+      // Get all rows in the table except the header row
+      var rows = document.querySelectorAll("#pitch-table tbody tr");
+
+      // Loop through each row
+      rows.forEach(function(row) {
+          // Get the datetime value from the row (assuming it's in the 4th cell)
+          var datetimeText = row.cells[3].textContent.trim();
+
+          // If the datetime is missing or invalid, hide the row
+          if (!datetimeText || datetimeText === '--') {
+              row.style.display = 'none';
+              return;
+          }
+
+          // Parse the datetime from the table row
+          var rowDate = new Date(datetimeText);
+
+          // Compare the rowDate with the start and end dates
+          if (rowDate >= startdate && rowDate <= enddate) {
+              // Show the row if within the range
+              row.style.display = '';
+          } else {
+              // Hide the row if outside the range
+              row.style.display = 'none';
+          }
+      });
+    }
+
+    // Function to sort the table by a given column
+    function sortTable(columnIndex) {
+      var table = document.getElementById("pitch-table");
+      var tbody = table.querySelector("tbody");
+      var rows = Array.from(tbody.querySelectorAll("tr"));
+      var isAscending = table.querySelectorAll("th")[columnIndex].classList.contains("sorted-asc");
+      
+      // Clear sorting classes from all headers
+      table.querySelectorAll("th").forEach(th => th.classList.remove("sorted-asc", "sorted-desc"));
+      
+      // Sort rows based on the content of the clicked column
+      rows.sort(function(rowA, rowB) {
+        var cellA = rowA.cells[columnIndex].textContent.trim();
+        var cellB = rowB.cells[columnIndex].textContent.trim();
+
+        if (columnIndex === 0) {
+          // Sort by ID (as a number)
+          return isAscending ? cellB - cellA : cellA - cellB;
+        } else if (columnIndex === 3) {
+          // Sort by Datetime (as a Date object)
+          var dateA = new Date(cellA);
+          var dateB = new Date(cellB);
+          return isAscending ? dateB - dateA : dateA - dateB;
+        } else {
+          // Sort by other columns (as text)
+          return isAscending ? cellB.localeCompare(cellA) : cellA.localeCompare(cellB);
+        }
+      });
+
+      // Re-append sorted rows to the table body
+      rows.forEach(row => tbody.appendChild(row));
+
+      // Update the sorted column class
+      table.querySelectorAll("th")[columnIndex].classList.add(isAscending ? "sorted-desc" : "sorted-asc");
+    }
+
+    // Function to fetch and display data
+    function fetchData() {
+      fetch('https://compute.samford.edu/zohauth/clients/datajson')
+        .then(response => response.json())
+        .then(data => {
+          var tbody = document.querySelector("#pitch-table tbody");
+
+          // Clear existing rows in tbody (if necessary)
+          tbody.innerHTML = '';
+
+          // Loop through each item in the data
+          data.forEach(item => {
+            // Create a new row for each item
+            const row = document.createElement('tr');
+            
+            // Create the ID cell with a link to details.html
+            const idCell = document.createElement('td');
+            const link = document.createElement('a');
+            link.href = 'details.html';
+            link.textContent = `Pitch ${item.id}`;
+            idCell.appendChild(link);
+            row.appendChild(idCell);
+            
+            // Speed cell
+            const speedCell = document.createElement('td');
+            speedCell.textContent = item.speed;
+            row.appendChild(speedCell);
+            
+            // Result cell
+            const resultCell = document.createElement('td');
+            resultCell.textContent = item.result || '--';
+            row.appendChild(resultCell);
+            
+            // Datetime cell
+            const datetimeCell = document.createElement('td');
+            datetimeCell.textContent = item.datetime || '--';
+            row.appendChild(datetimeCell);
+            
+            // Append the row to the tbody
+            tbody.appendChild(row);
+          });
+        })
+        .catch(error => {
+          console.error('Error fetching data:', error);
+        });
+    }
+
+    // Call fetchData when the page loads
+    window.onload = fetchData;
+  </script>
+</body>
+</html>
