@@ -41,7 +41,6 @@ function filterData(event) {
 
 
 // Ensure the tbody is created outside the fetch logic
-    let tbody = table.querySelector('tbody');
     if (!tbody) {
         tbody = document.createElement('tbody');
         table.appendChild(tbody);
